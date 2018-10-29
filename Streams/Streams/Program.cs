@@ -2,19 +2,25 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Streams
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             string inputPath = @"A:\Learning\C#\Streams\Streams\originofspecies.txt";
             string outputPath = @"A:\Learning\C#\Streams\Streams\output.txt";
 
             ReadBookSync(inputPath);
             ReadAndWriteSync(inputPath, outputPath);
+            await DownloadCatImage();
+
+            Console.WriteLine("Press any key to finish");
+            Console.ReadKey();
         }
 
         static void ReadBookSync(string path)
@@ -28,6 +34,14 @@ namespace Streams
                 bookAnalytics.ShowMostUsedWordByPosition(wordList, 12);
                 bookAnalytics.ShowMostUsedWordByLength(wordList, 5);
                 bookAnalytics.ShowWordAppearanceCount(wordList, "varieties");
+            }
+        }
+
+        static void ReadBookAsync(string path)
+        {
+            using (StreamReader sr = new StreamReader(path))
+            {
+
             }
         }
 
@@ -61,6 +75,27 @@ namespace Streams
             return matchList
                 .Select(match => match.Value)
                 .ToList();
+        }
+
+        static async Task DownloadCatImage()
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                string url = "https://api.thecatapi.com/v1/images/search?format=src&size=full";
+
+                //using (HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
+                //using (Stream streamToReadFrom = await response.Content.ReadAsStreamAsync())
+                using (Stream streamToReadFrom = await client.GetStreamAsync(url))
+                {
+                    string fileToWriteTo = @"A:\Learning\C#\Streams\Streams\cat.jpg";
+                    using (Stream streamToWriteTo = File.Open(fileToWriteTo, FileMode.Create))
+                    {
+                        await streamToReadFrom.CopyToAsync(streamToWriteTo);
+                    }
+                }
+            }
+                
+
         }
     }
 
